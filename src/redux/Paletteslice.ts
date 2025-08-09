@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import { v4 as uuidv4 } from "uuid"; // For unique IDs
 
 // Define types for form items
-interface ValidationRules {
+export interface ValidationRules {
   required?: boolean;
   minLength?: number;
   maxLength?: number;
@@ -15,7 +15,7 @@ interface Option {
   label: string;
 }
 
-interface SelectedItem {
+export interface SelectedItem {
   id: string;
   type: string;
   label?: string;

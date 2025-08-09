@@ -2,15 +2,18 @@ import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
-import { Eye, Files, GripHorizontal, Plus, PlusCircle, Save, SquarePen, Trash } from 'lucide-react';
+import { Eye, GripHorizontal, PlusCircle, SquarePen, Trash } from 'lucide-react';
 import FieldPallet from '../components/FieldPallet';
 import { v4 as uuidv4 } from "uuid";
 import Modal from './Modal.js'
 import { useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../redux/store';
-import { deleteSelectedItem, editSelectedItem, setSelectedItem, swapSelectedItems, type SelectedItem, type StoredData, type ValidationRules } from '../redux/Paletteslice';
+import { deleteSelectedItem, editSelectedItem, setSelectedItem, swapSelectedItems } from '../redux/Paletteslice';
+// Update the path below to the correct file where SelectedItem is exported.
+// For example, if SelectedItem is exported from Paletteslice.ts:
+import type { SelectedItem, ValidationRules } from '../redux/Paletteslice';
 import { useDispatch } from 'react-redux';
-import { useEffect, useRef, useState, type ChangeEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 
 const Item = styled(Paper)(({ theme }) => ({
@@ -40,7 +43,7 @@ const renderInputField = (item: SelectedItem) => {
       return (
         <select className="w-full p-2 rounded-md border border-zinc-600 bg-zinc-900 text-zinc-200">
           <option value="">Select {item.label}</option>
-          {item.options?.map((opt) => (
+          {item.options?.map((opt: { id: string; label: string }) => (
             <option key={opt.id} value={opt.label}>{opt.label}</option>
           ))}
         </select>
@@ -49,7 +52,7 @@ const renderInputField = (item: SelectedItem) => {
     case "Radio Button Group":
       return (
         <div className="flex gap-4 text-zinc-200">
-          {item.options?.map((opt) => (
+          {item.options?.map((opt: { id: string; label: string }) => (
             <label key={opt.id}>
               <input type="radio" name={item.id} value={opt.label} /> {opt.label}
             </label>
@@ -60,7 +63,7 @@ const renderInputField = (item: SelectedItem) => {
     case "Checkbox Group":
       return (
         <div className="flex gap-4 text-zinc-200">
-          {item.options?.map((opt) => (
+          {item.options?.map((opt: { id: string; label: string }) => (
             <label key={opt.id}>
               <input type="checkbox" value={opt.label} /> {opt.label}
             </label>
@@ -110,13 +113,15 @@ const FieldRenderer = ({ items }: { items: SelectedItem[] }) => {
     setValidationChecks(initialChecks);
   }, [items]);
 
-  const toggleValidation = (itemId: string, field: string) => {
+  type ValidationField = 'required' | 'minLength' | 'maxLength' | 'pattern';
+
+  const toggleValidation = (itemId: string, field: ValidationField) => {
     setValidationChecks((prev) => {
       const newChecks = {
         ...prev,
         [itemId]: {
           ...prev[itemId],
-          [field]: !prev[itemId]?.[field],
+          [field]: !prev[itemId]?.[field as ValidationField],
         },
       };
       const item = items.find((i) => i.id === itemId);
@@ -160,7 +165,7 @@ const FieldRenderer = ({ items }: { items: SelectedItem[] }) => {
     const item = items.find((i) => i.id === itemId);
     if (item) {
       const currentOptions = changes[itemId]?.options || item.options || [];
-      const updatedOptions = currentOptions.map((opt) =>
+      const updatedOptions = currentOptions.map((opt: { id: string; label: string }) =>
         opt.id === optionId ? { ...opt, label } : opt
       );
       setChanges((prev) => ({
@@ -189,7 +194,7 @@ const FieldRenderer = ({ items }: { items: SelectedItem[] }) => {
     const item = items.find((i) => i.id === itemId);
     if (item) {
       const currentOptions = changes[itemId]?.options || item.options || [];
-      const updatedOptions = currentOptions.filter((opt) => opt.id !== optionId);
+      const updatedOptions = currentOptions.filter((opt: { id: string; label: string }) => opt.id !== optionId);
       setChanges((prev) => ({
         ...prev,
         [itemId]: { ...prev[itemId], options: updatedOptions },
@@ -271,10 +276,10 @@ const FieldRenderer = ({ items }: { items: SelectedItem[] }) => {
 
           {item.type === 'Derived Field' && (
             <div className="mb-4">
-              <label className="text-sm font-medium text-zinc-300 block mb-1">Reference Item ID (DOB Field)</label>
+              <label className="text-sm font-medium text-zinc-300 block mb-1">DOB Item ID (Age Calculation)</label>
               <input
                 type="text"
-                defaultValue={changes[item.id]?.referenceItemId || item.referenceItemId || ''}
+                defaultValue={changes[item.id]?.referenceItemId || ''}
                 onChange={(e) => handleReferenceItemIdChange(item.id, e.target.value)}
                 className="w-full p-2 rounded-lg border border-zinc-600 bg-zinc-950 text-zinc-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 placeholder="Enter the ID of the DOB field"
@@ -287,7 +292,7 @@ const FieldRenderer = ({ items }: { items: SelectedItem[] }) => {
               <label className="text-sm font-medium text-zinc-300 block mb-1">Options</label>
               <ul className="space-y-2">
                 {(changes[item.id]?.options || item.options)?.length ? (
-                  (changes[item.id]?.options || item.options).map((opt) => (
+                  ((changes[item.id]?.options || item.options) ?? []).map((opt: { id: string; label: string }) => (
                     <li key={opt.id} className="flex items-center gap-2">
                       <input
                         type="text"
@@ -448,6 +453,8 @@ useEffect(()=>{
 },[selectedFormIndex,items])
 
 
+const [copied,setcopied] = useState<boolean>(false)
+
 
      console.log("Items ",items)
 
@@ -469,7 +476,6 @@ useEffect(()=>{
                 <div className='w-full z-50 max-h-screen sticky top-18 bg-zinc-900 font-bold p-2 flex items-center justify-between'>
                     <h1 className='text-zinc-200 text-lg'>Design Your Form</h1>
                     <div className='flex items-center text-zinc-200 justify-center gap-4'>
-                         <button className="bg-zinc-900 text-md cursor-pointer hover:text-white p-2 rounded-md hover:transition-all duration-300 ease-linear"><h1 className="flex items-center justify-center gap-2"><Eye />Preview</h1></button>
             <Modal/>
 
            
@@ -477,7 +483,7 @@ useEffect(()=>{
                 </div>
 
                 <div className='w-full mt-4 scroll-smooth flex overflow-auto flex-col bg-zinc-800'>
-                        {items.map((item,index)=>(
+                        {items.map((item)=>(
                              <div draggable onDragStart={()=>(dragPerson.current = item.id)} onDragEnter={()=> (dragOverPerson.current = item.id)} onDragEnd={handleSort} onDragOver={(e)=> e.preventDefault()} key={item.id} className="relative cursor-grab p-4 border-b border-zinc-700">
                                 <div><GripHorizontal color='white'/></div>
     <div className="absolute top-2 right-2 flex gap-2 opacity-70 hover:opacity-100 cursor-pointer">
@@ -488,7 +494,24 @@ useEffect(()=>{
     <label className="block mb-1 text-start font-semibold text-zinc-300">{item.type}</label>
     {
       item.type === 'Date Picker' ? (
-        <label className="block mb-1 text-start font-semibold text-[12px] text-zinc-300">{item.id}</label>
+        <div className="flex items-center gap-2 mb-1">
+          <label className="block text-start font-semibold text-[12px] text-zinc-300">{item.id}</label>
+          <button
+            type="button"
+            className="text-zinc-400 hover:text-blue-400 p-1 rounded"
+            onClick={() => {
+              navigator.clipboard.writeText(item.id);
+              alert('Copied')
+            }}
+            title="Copy ID to clipboard"
+          >{
+            copied ? 
+            <p>Copied</p> 
+            : 
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/><rect x="3" y="3" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="2"/></svg>
+          }
+          </button>
+        </div>
       ) : ""
     }
     {/* {renderInputField(item.type)} */}
