@@ -2,7 +2,7 @@ import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid';
-import { Eye, GripHorizontal, PlusCircle, SquarePen, Trash } from 'lucide-react';
+import { GripHorizontal, PlusCircle, SquarePen, Trash } from 'lucide-react';
 import FieldPallet from '../components/FieldPallet';
 import { v4 as uuidv4 } from "uuid";
 import Modal from './Modal.js'
@@ -453,7 +453,7 @@ useEffect(()=>{
 },[selectedFormIndex,items])
 
 
-const [copied,setcopied] = useState<boolean>(false)
+const [copied] = useState<boolean>(false)
 
 
      console.log("Items ",items)

@@ -1,5 +1,4 @@
 import { Calculator, Calendar1, CheckLine, CircleDot, Hash, List, Menu, TextSelect } from "lucide-react";
-import { useState } from "react"
 import { useDispatch } from "react-redux";
 import type { AppDispatch, RootState } from "../redux/store";
 import { useSelector } from "react-redux";
@@ -7,7 +6,7 @@ import { addSelectedItem } from "../redux/Paletteslice";
 
 const FieldPallet = () => {
 
-    const [field,setfield] = useState<String>('')
+  // Removed unused field and setfield state
 
     const dispatch = useDispatch<AppDispatch>()
 
